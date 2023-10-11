@@ -1,0 +1,2 @@
+load("/Users/annechang/umich/course/Surv687/surv687-project/BAHWS_UF_codebook.RData")
+load("/Users/annechang/umich/course/Surv687/surv687-project/BAHWSd_UF.RData")

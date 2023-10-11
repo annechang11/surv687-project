@@ -1,0 +1,50 @@
+Bangladesh Adolescent Health And Wellbeing Survey (BAHWS) 2018-19
+
+Size:
+
+67093   Households completed
+
+7800   Never Married Female adolescents 15-19  completed
+
+```{r}
+# load the codebook
+UF <- read.csv('/Users/annechang/umich/course/Surv687/surv687-project/BAHWSd_UF.csv')
+```
+
+```{r}
+# only use the completed cases
+UF_completed <- UF[UF$QRESULT == 'Completed',] # n=7800
+dim(UF_completed)
+```
+
+```{r}
+# Q104: education
+table(UF_completed$UF104)
+# 99.5% of respondents go to school
+```
+
+```{r}
+# Q112a: mother lives in the same household with u
+table(UF_completed$UF112A) 
+7300/7800 # 93.5% lives in the same household
+```
+
+```{r}
+# 127: adolescent program
+table(UF_completed$UF127) 
+# most ppl not in any programs
+```
+
+```{r}
+# 201: having a mobile phone
+table(UF_completed$UF201) 
+6108/7800 # 78% not have a phone
+```
+
+```{r}
+# 202 family member have phone
+table(UF_completed$UF202)
+sum(UF$UF202 == 'Yes')
+6030/7800
+# 77% family have phone
+```
