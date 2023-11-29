@@ -1,0 +1,378 @@
+---
+title: "Group_project"
+author: "Anne, Aulia, Ilmul"
+date: "2023-09-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Note : I turned off the code for cleaning process temporarily. 
+
+### Library
+
+``````{r, message=FALSE}
+# opens library
+library(haven)
+library(dplyr)
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(ggplot2)
+library(broom.mixed)
+library(parameters)
+library(merDeriv)
+library(sjPlot)
+library(geepack)
+library(readxl)
+library(survey)
+library(ggpubr)
+library(gtsummary)
+library(flextable)
+library(labelled)
+
+# function to count the missing values
+count_missing_categorical <- function(column) {
+  na_count <- sum(is.na(column))
+  empty_count <- sum(column == "" | column == "NA" | column == "N/A") 
+  
+  if (is.na(na_count)) {
+    return(empty_count)
+  } else if (is.na(empty_count)) {
+    return(na_count)
+  }
+  
+  return(na_count + empty_count)
+}
+```
+
+Bangladesh Adolescent Health And Wellbeing Survey (BAHWS) 2018-19
+
+Size:
+
+67093   Households completed
+
+7800   Never Married Female adolescents 15-19  completed
+
+### Open data set
+
+```{r}
+# load the codebook
+#UF <- read.csv('~/SURVMETH687_group_pro/surv687-project/surv687-project/BAHWSd_UF.csv') #8284
+```
+
+The total observation is 8384. 
+
+### Cleaning process
+
+### 1. Check unit non response
+
+```{r}
+# only use the completed cases
+#UF_completed <- UF[UF$QRESULT == 'Completed',] # n=7800
+#dim(UF_completed)
+```
+
+There are 7800 Respondents completed the interviews. 
+
+### 2. Check item non response
+
+```{r}
+# subset only for variable of interest
+#UF_completed <- UF_completed[,c("recordID","QCLUSTER", "QNUMBER", "QLINE", "QHDIVISION", 
+                                #"QHDISTRICT", "QHTYPE","QHQTYPE", "QRTYPE", "QINTNUM",  
+                                #"QRESULT", "QWEIGHT_UF", # identity
+                                #"UF104", "UF106", "UF107", "UF108", # Education level
+                                #"UF109", # Jobs for the respondents
+                                #"UF126E", # Affiliation with any club/organization
+                                #"UF201",  # Technology access
+                                #"UF206","UF207", # Internet usage behavior/Information                                                                            access
+                                #"UF315A", "UF315B", "UF315C", "UF315D", # Internet usage behavior
+                                                                        # Information access
+                                #"UF702C", # Communication with mother
+                                #"UF301", # "Did they experience menstruation?"
+                                #"UF302", # Age first at menstruation
+                                #"UF303", # Had knowledge about MP before experience
+                                #"UF703A", # Talking with mother regarding menstruation
+                                #"Domain", "Strata", "QHWLTHF", "QHWLTHI" # additional sampling information
+                                #)]
+
+#dim(UF_completed)
+```
+
+The total observation is 7800 with 34 variables. 
+
+```{r}
+# remove missing values in UF303 (the main variable of interest)
+#UF_completed <- UF_completed[UF_completed$UF303!="",]
+#dim(UF_completed) # n=3908
+```
+
+The total observation is 3908. 
+
+```{r}
+# check column names of the data
+#colnames(UF_completed)
+```
+
+
+```{r}
+# check the missing values for other variables
+#summary_stats <- lapply(UF_completed[,c(13:30)], count_missing_categorical)
+#column_summary <- sapply(summary_stats, function(x) x)
+#print(column_summary) #there is still missing values for UF106, UF107, UF702C, UF703A
+```
+
+```{r}
+# remove missing values in UF702C 
+#UF_completed <- UF_completed[UF_completed$UF702C!="",]
+#dim(UF_completed) # n=3820
+```
+
+The total observation is 3820. 
+
+```{r}
+# check the missing values 
+#summary_stats <- lapply(UF_completed[,c(13:26)], count_missing_categorical)
+#column_summary <- sapply(summary_stats, function(x) x)
+#print(column_summary) #still have 17 missing values for variables UF106 and UF107
+```
+
+We still have missing values for UF106 and UF107.
+
+```{r}
+# remove missing values from UF107
+#UF_completed <- UF_completed[UF_completed$UF107!="",]
+#dim(UF_completed) #n=3803
+```
+
+The total observation is 3803. 
+
+```{r}
+# check the missing values 
+#summary_stats <- lapply(UF_completed[,c(13:26)], count_missing_categorical)
+#column_summary <- sapply(summary_stats, function(x) x)
+#print(column_summary) #all complete cases
+```
+
+All variables are complete. No missing values. 
+
+```{r}
+# check dimension
+#dim(UF_completed) #n=3803
+```
+
+The final observation is 3803 with 34 variables. 
+
+```{r}
+# check the distribution for each variables
+#count_obervation <- function(column) {
+#  obs_count <- table(column)
+  
+#  return(obs_count)
+#}
+
+#summary_stats <- lapply(UF_completed[,c(13:26)], count_obervation)
+#column_summary <- sapply(summary_stats, function(x) x)
+#print(column_summary)
+```
+
+There is no missing values anymore. The data is complete. 
+
+### Save the data
+
+```{r}
+#write.csv(UF_completed, file="C:/Users/ASUS/Dropbox (University of Michigan)/Aulia Dini Rafsanjani’s files/GROUP_PROJECT_687/UF_clean2.csv", row.names = FALSE)
+```
+
+### Read data set
+
+```{r}
+# read data set
+UF_clean2 <- read.csv("C:/Users/ASUS/Dropbox (University of Michigan)/Aulia Dini Rafsanjani’s files/GROUP_PROJECT_687/UF_clean2.csv")
+```
+
+### Descriptive Statistics
+
+```{r}
+var_label(UF_clean2) <- list(
+                      QHTYPE = "Urban-rural status",
+                      #UF104 = "Ever attended school",
+                      #UF106 = "Highest class attended",
+                      #UF107 = "Currently attending school",
+                      #UF109 = "Currently working",
+                      UF126E = "Affiliated with reading library",
+                      #UF201 = "Have own mobile phone",
+                      UF206 = "Use internet using computer",
+                      UF207 = "Read any adolescent focused article",
+                      #UF301 = "Experienced menstruation",
+                      #UF302 = "Age of first menstruation",
+                      UF303 = "Knowledge before experiencing menstruation",
+                      UF315A = "Heard or watched anything about menstruation in TV/Radio",
+                      UF315B = "Read anything about menstruation in Textbook/books",
+                      UF315C = "Read anything about menstruation in Newspaper/magazine",
+                      UF315D = "Read or watched anything about menstruation in the Internet",
+                      #UF702C = "Talk with mother about very personal things",
+                      UF703A = "Feel comfortable discussing about menstruation with mother")
+```
+
+```{r Sample characteristics, warning=FALSE, message=FALSE}
+#Preparing table for initial descriptive statistics
+set_gtsummary_theme(theme_gtsummary_compact(set_theme = TRUE))
+
+#To get the descriptives
+des1 <- UF_clean2 %>%
+  dplyr::select(QHTYPE,UF126E,UF206,UF207,UF301,UF302,UF303,UF315A,UF315B,UF315C,UF315D,UF702C,UF703A) %>%
+            tbl_summary(
+              type = list(all_dichotomous() ~ "categorical",
+                          all_continuous() ~ "continuous"),
+              statistic = list(all_continuous() ~ "{mean} ({sd})",
+                          all_categorical() ~ "{n} ({p}%)"),
+              percent = "column",
+              digits = all_continuous() ~ 1) %>%  
+  bold_labels() %>% 
+  italicize_levels() %>% 
+  as_flex_table()
+
+des1
+```
+
+### Create Multi-level Modelling using top-down approach
+
+### Create full model with random effects (cluster)
+
+```{r}
+# change 303 to factor
+UF_clean2$UF303 <- as.factor(UF_clean2$UF303)
+UF_clean2$UF303 <- relevel(UF_clean2$UF303, ref = "No") 
+```
+
+```{r}
+# change 206 as factor
+UF_clean2$UF206 <- as.factor(UF_clean2$UF206)
+UF_clean2$UF206 <- factor(UF_clean2$UF206, levels = c("Every day", "At least once a week", "Less than one a week", "Not at all"))
+UF_clean2$UF206 <- relevel(UF_clean2$UF206, ref = "Not at all")
+```
+
+```{r}
+# change QHTYPE as factor
+UF_clean2$QHTYPE <- as.factor(UF_clean2$QHTYPE)
+UF_clean2$QHTYPE <- factor(UF_clean2$QHTYPE, levels = c("Urban", "Other urban", "Rural"))
+UF_clean2$QHTYPE <- relevel(UF_clean2$QHTYPE, ref = "Rural")
+```
+
+```{r}
+#full model
+fit.0 <- glmer(UF303 ~ factor(UF315A) + factor(UF315B) + factor(UF315C) + factor(UF315D) +  factor(UF126E) + factor(UF206) + factor(UF207) + factor(UF703A) + factor(QHTYPE) + (1 | QCLUSTER), 
+             family = binomial, 
+             nAGQ = 1, 
+             data = UF_clean2)
+
+summary(fit.0)
+```
+
+```{r}
+# print the value of sigma 0 sq
+sigma0_sq = fit.0@pp$theta ^ 2
+sigma0_sq
+
+# compute ICC
+icc_0 = sigma0_sq / ( sigma0_sq + pi ^ 2 / 3 )
+icc_0 
+```
+
+```{r}
+# conduct lrt test to check the random effect
+fit.0.null <- glm(UF303 ~ factor(UF315A) + factor(UF315B) + factor(UF315C) + factor(UF315D) +  factor(UF126E) + factor(UF206) + factor(UF207) + factor(UF703A) + factor(QHTYPE), 
+             family = binomial, 
+             data = UF_clean2)
+
+summary(fit.0.null)
+```
+
+```{r}
+# a function to compute p-value for lr test (lrt)
+lrt.pvalue <- function(fit1, fit2) {
+  lrtstat <-
+    (-2 * as.numeric(logLik(fit2))) - (-2 * as.numeric(summary(fit1)$logLik))
+  pvalue = 0.5 * (1 - pchisq(lrtstat, 2)) + 0.5 * (1 - pchisq(lrtstat, 1))
+  return(pvalue)
+}
+
+lrt.pvalue(fit.0, fit.0.null) #significant for full model # continue to use random effect? # should we do lrt test for full model or reduced model?
+```
+
+### Create reduced model
+
+```{r}
+# reduced model
+fit.a <- glmer(UF303 ~ factor(UF315A) + factor(UF315B) + factor(UF315D)  + factor(UF206)  + (1 | QCLUSTER), 
+             family = binomial, 
+             nAGQ = 1, 
+             data = UF_clean2)
+
+summary(fit.a)
+```
+
+```{r}
+# print the value of sigma 0 sq
+sigma0_sqa = fit.a@pp$theta ^ 2
+sigma0_sqa
+
+# compute ICC
+icc_a = sigma0_sqa / ( sigma0_sqa + pi ^ 2 / 3 )
+icc_a 
+```
+
+```{r}
+# conduct lrt test to check the random effect
+fit.a.null <- glm(UF303 ~ factor(UF315A) + factor(UF315B) + factor(UF315D)  + factor(UF206), 
+             family = binomial, 
+             data = UF_clean2)
+
+summary(fit.a.null)
+```
+
+```{r}
+lrt.pvalue(fit.a, fit.a.null) # random effect is significant for reduced model
+```
+
+### Compute AIC and BIC
+
+```{r}
+# compute AIC
+AIC(fit.0)
+AIC(fit.a)
+```
+
+```{r}
+# compute BIC
+BIC(fit.0)
+BIC(fit.a)
+```
+
+
+# Model diagnostic
+
+```{r}
+# compute predicted probability
+predicted_prob <- predict(fit.a, newdata = UF_clean2, type = "response")
+
+# Combine predicted probabilities with the original dataset
+result <- data.frame(UF303 = UF_clean2$UF303, Predicted_Prob = predicted_prob)
+
+# Print the result
+head(result)
+```
+
+```{r}
+# create plot of predicted result 
+ggplot(result, aes(x = UF303, y = Predicted_Prob)) +
+  geom_boxplot(fill = "lightblue", color = "blue") +
+  labs(x = "UF303 (Original Response)", y = "Predicted Probability") +
+  ggtitle("Boxplot of Predicted Probability across UF303 Levels")
+```
+
+
